@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: iris
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d iris"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./api
+    env_file: api/.env
+    ports:
+      - "8000:8000"
+    # nestana el db tb2a gahza el awel abl ma el api y3ml el table
+    depends_on:
+      db:
+        condition: service_healthy
+
+  ui:
+    build: ./ui
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
